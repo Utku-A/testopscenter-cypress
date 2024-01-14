@@ -1,0 +1,13 @@
+{
+    "name": "testopscenter-cypress",
+    "version": "1.0.0",
+    "description": "Test Reporting Tool",
+    "main": "index.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "Halis Utku Aladağ",
+    "license": "MIT"
+  }
+  
