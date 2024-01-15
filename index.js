@@ -1,5 +1,22 @@
 let api_url = 'https://api.testopscenter.com/v1'
 let platform = 'Cyppress';
+let session_id;
+
+function connect(on, team_spkey, version_name) {
+
+    on('before:run', async () => {
+        session_id = await get_session_id(team_spkey, version_name);
+    })
+
+    on('after:spec', async (spec, results) => {
+        await save_test_results(session_id, results);
+    })
+
+    on('after:run', async () => {
+        await complete_test_session(session_id);
+    })
+
+}
 
 async function get_session_id(team_spkey, version) {
     const get_session_body = {
@@ -15,7 +32,6 @@ async function get_session_id(team_spkey, version) {
     const responseData = await response.json();
     return responseData.Session_ID
 }
-
 
 async function save_test_results(session_id, results) {
     var result;
@@ -42,8 +58,6 @@ async function save_test_results(session_id, results) {
     }
 }
 
-
-
 async function complete_test_session(session_id) {
     const stop_session_body = {
         method: 'POST',
@@ -54,3 +68,7 @@ async function complete_test_session(session_id) {
     }
     await fetch(api_url + '/stop-automation-session/cypress', stop_session_body);
 }
+
+module.exports = {
+    connect
+};
