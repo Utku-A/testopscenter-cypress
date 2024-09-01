@@ -1,15 +1,17 @@
+const fs = require('fs');
 let api_url = 'https://api.testopscenter.com/v1'
 let platform = 'Cyppress';
 let session_id;
 
 function connect(on, team_spkey, version_name) {
+    var team_spkey = team_spkey;
 
     on('before:run', async () => {
         session_id = await get_session_id(team_spkey, version_name);
     })
 
     on('after:spec', async (spec, results) => {
-        await save_test_results(session_id, results);
+        await save_test_results(session_id, results, team_spkey);
     })
 
     on('after:run', async () => {
@@ -22,18 +24,14 @@ async function get_session_id(team_spkey, version) {
     const get_session_body = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            'team_key': team_spkey,
-            'platform': platform,
-            'version': version
-        })
+        body: JSON.stringify({'team_key': team_spkey,'platform': platform,'version': version})
     }
     const response = await fetch(api_url + '/get_automation_session/cypress', get_session_body);
     const responseData = await response.json();
     return responseData.Session_ID
 }
 
-async function save_test_results(session_id, results) {
+async function save_test_results(session_id, results, team_spkey) {
     var result;
     for (var i = 0; i < results.tests.length; i++) {
         if (results.tests[i].state == "passed") {
@@ -47,14 +45,30 @@ async function save_test_results(session_id, results) {
         const save_test_result_body = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                'session_id': session_id,
-                'test_name': `${results.tests[i].title[0]} - ${results.tests[i].title[1]}`,
-                'test_result': result,
-                'error_log': errorValue
-            })
+            body: JSON.stringify({'session_id': session_id,'test_name': `${results.tests[i].title[0]} - ${results.tests[i].title[1]}`,'test_result': result,'error_log': errorValue})
         }
-        await fetch(api_url + '/save-test-result/cypress', save_test_result_body);
+        await fetch(api_url + '/save-test-result/cypress', save_test_result_body)
+            .then(response => response.json())
+            .then(response_data => {
+                var filePath = results.screenshots[0].path.replace(/\\/g, '/').replace(/\/$/, '');
+                console.log("Burada path attım hadi bakalımm...")
+                console.log(filePath)
+                fs.readFile(filePath, (err, data) => {
+                    var test_id = response_data.test_id
+                    var base64Data = data.toString('base64');
+
+                    fetch(api_url + "/upload-test-screenshot/cypress", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({'files' : base64Data,'team_spkey': team_spkey,'session': session_id,'test_id': test_id})
+                    }).then(response => response.json()).then(result => {
+                        console.log('Success:', result);
+                    }).catch(error => {
+                        console.error('Error:', error);
+                    });
+                })
+            }
+        );
     }
 }
 
@@ -62,9 +76,7 @@ async function complete_test_session(session_id) {
     const stop_session_body = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            'session_id': session_id
-        })
+        body: JSON.stringify({'session_id': session_id})
     }
     await fetch(api_url + '/stop-automation-session/cypress', stop_session_body);
 }

@@ -22,12 +22,11 @@ const { defineConfig } = require("cypress");
 const reporter = require("testopscenter-cypress");
 
 
-let team_spkey = "{TEAM SPKEY VALUE}"
-let version_name = "QA ENV Web Site" // Optional
-
 module.exports = defineConfig({
   e2e: {
     setupNodeEvents(on, config) {
+      let team_spkey = process.env.TEAM_SPKEY || "<team_spkey>";
+      let version_name = process.env.VERSION_NAME || "Cypress";
       reporter.connect(on,team_spkey,version_name)
     },
   },

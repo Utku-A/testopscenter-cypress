@@ -1,11 +1,13 @@
 {
     "name": "testopscenter-cypress",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "Test Reporting Tool",
     "main": "index.js",
     "scripts": {},
     "keywords": [],
     "author": "Halis Utku Aladağ <halisutku.aladag@testopscenter.com>",
-    "license": "MIT"
-  }
-  
+    "license": "MIT",
+    "dependencies": {
+        "testopscenter-cypress": "file:"
+    }
+}
