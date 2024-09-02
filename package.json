@@ -1,6 +1,6 @@
 {
     "name": "testopscenter-cypress",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "description": "Test Reporting Tool",
     "main": "index.js",
     "scripts": {},
