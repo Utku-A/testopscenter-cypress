@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require("path");
 let api_url = 'https://api.testopscenter.com/v1'
 let platform = 'Cyppress';
 let session_id;
@@ -50,8 +51,9 @@ async function save_test_results(session_id, results, team_spkey) {
         await fetch(api_url + '/save-test-result/cypress', save_test_result_body)
             .then(response => response.json())
             .then(response_data => {
-                if (results.screenshots[0].path) {
-                    var filePath = results.screenshots[0].path.replace(/\\/g, '/').replace(/\/$/, '');
+                if (results.screenshots[0]) {
+                    // var filePath = results.screenshots[0].path.replace(/\\/g, '/').replace(/\/$/, '');
+                    const filePath = path.normalize(results.screenshots[0].path)
                     fs.readFile(filePath, (err, data) => {
                         var test_id = response_data.test_id
                         var base64Data = data.toString('base64');
@@ -59,10 +61,8 @@ async function save_test_results(session_id, results, team_spkey) {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ 'files': base64Data, 'team_spkey': team_spkey, 'session': session_id, 'test_id': test_id })
-                        }).then(response => response.json()).then(result => {
-                            console.log('Success:', result);
                         }).catch(error => {
-                            console.error('Error:', error);
+                            console.error('TestOps Center - Screenshot upload error:', error);
                         });
                     })
                 }
